@@ -1,5 +1,7 @@
 import { $ } from "./utils/dom.js";
-import store from "./store/store.js";
+// import store from "./store/store.js";
+import { MenuApi } from "./api/api.js";
+import { BASE_URL } from "./api/api.js";
 
 function App() {
   let menu = {
@@ -13,20 +15,24 @@ function App() {
   let currentCategory = "espresso";
 
   const init = () => {
-    if (store.getLocalStorage()) {
-      const data = store.getLocalStorage();
-      //   console.log(data);
-      menu = data;
-    }
-    render();
+    fetch(`${BASE_URL}/category/${currentCategory}/menu`)
+      .then((response) => response.json())
+      .then((data) => {
+        menu[currentCategory] = data;
+        render();
+      });
     initEventListeners();
   };
 
-  const render = () => {
+  const render = async () => {
+    menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
+    console.log(MenuApi.getAllMenuByCategory(currentCategory));
     const template = menu[currentCategory]
-      .map((item, index) => {
+      .map((item) => {
         return `
-        <li data-menu-id=${index} class="menu-list-item d-flex items-center py-2">  
+        <li data-menu-id=${
+          item.id
+        } class="menu-list-item d-flex items-center py-2">  
           <span class="w-100 pl-2 menu-name ${
             item.isSoldOut ? "sold-out" : ""
           }">${item.name}</span>
@@ -64,41 +70,51 @@ function App() {
   };
 
   /** 메뉴추가 함수 */
-  const addMenuName = () => {
+  const addMenuName = async () => {
     const MenuName = $("#menu-name").value;
 
     if (MenuName === "") {
       return alert("값을 입력해주세요");
     }
-    menu[currentCategory].push({ name: MenuName });
-    store.setLocalStorage(menu);
+    console.log(MenuName);
+    const duplicatedItem = menu[currentCategory].find(
+      (menu) => menu.name === $("#menu-name").value
+    );
+    console.log(menu[currentCategory][0].name);
+
+    if (duplicatedItem) {
+      alert("이미 등록된 아이템입니다.");
+    }
+
+    console.log(duplicatedItem);
+
+    await MenuApi.createMenu(MenuName, currentCategory);
     render();
   };
 
   /** 메뉴수정 함수 */
-  const updateMenuName = (e) => {
+  const updateMenuName = async (e) => {
     const menuId = e.target.closest("li").dataset.menuId; // dataSet🐯
     console.log(menuId);
     const $menuName = e.target.closest("li").querySelector(".menu-name"); //가까운 요소 찾고 querySelector로 찾기
     const menuName = $menuName.innerText;
     const updatedMenuName = prompt("메뉴명을 수정하세요", menuName);
-    menu[currentCategory][menuId].name = updatedMenuName;
-    store.setLocalStorage(menu);
+    await MenuApi.updateMenu(currentCategory, updatedMenuName, menuId);
+    // menu[currentCategory][menuId].name = updatedMenuName;
+    // store.setLocalStorage(menu);
     render();
   };
   /** 메뉴삭제 함수 */
-  const removeMenuName = (e) => {
+  const removeMenuName = async (e) => {
     const menuId = e.target.closest("li").dataset.menuId;
     // console.log(e.target.closest("li"));
-    menu[currentCategory].splice(menuId, 1);
-    store.setLocalStorage(menu);
+    await MenuApi.deleteMenu(currentCategory, menuId);
     render();
-    // console.log(menu);
     UpdateMenuCount();
   };
 
   /** 수정 버튼 & 삭제 버튼 */
-  $("#menu-list").addEventListener("click", (e) => {
+  $("#menu-list").addEventListener("click", async (e) => {
     const className = e.target.className;
 
     if (className.includes("menu-edit-button")) {
@@ -111,10 +127,10 @@ function App() {
     }
     if (className.includes("menu-sold-out-button")) {
       const menuId = e.target.closest("li").dataset.menuId;
-      menu[currentCategory][menuId].isSoldOut =
-        !menu[currentCategory][menuId].isSoldOut; //로컬에 저장된다..?
-
-      store.setLocalStorage(menu);
+      // menu[currentCategory][menuId].isSoldOut =
+      //   !menu[currentCategory][menuId].isSoldOut; //로컬에 저장된다..?
+      // store.setLocalStorage(menu);
+      await MenuApi.toggleMenu(currentCategory, menuId);
       render();
     }
   });
@@ -133,7 +149,7 @@ function App() {
       }
     });
 
-    $("nav").addEventListener("click", (e) => {
+    $("nav").addEventListener("click", async (e) => {
       const isButton = e.target.classList.contains("cafe-category-name");
       if (isButton) {
         const categoryBtnName = e.target.dataset.categoryName;
