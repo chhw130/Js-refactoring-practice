@@ -14,6 +14,7 @@ function App() {
 
   let currentCategory = "espresso";
 
+  /** 초기설정 하는 함수 */
   const init = () => {
     fetch(`${BASE_URL}/category/${currentCategory}/menu`)
       .then((response) => response.json())
@@ -24,9 +25,9 @@ function App() {
     initEventListeners();
   };
 
+  /**렌더링 함수 */
   const render = async () => {
     menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
-    console.log(MenuApi.getAllMenuByCategory(currentCategory));
     const template = menu[currentCategory]
       .map((item) => {
         return `
@@ -64,7 +65,7 @@ function App() {
 
   /**갯수 고쳐주는 함수 */
   const UpdateMenuCount = () => {
-    const menuCount = $("#menu-list").querySelectorAll("li").length;
+    // const menuCount = $("#menu-list").querySelectorAll("li").length;   /**html태그를 셀수 있음.*/
     $("#menu-name").value = "";
     $(".menu-count").innerText = `총 ${menu[currentCategory].length}개`;
   };
