@@ -81,13 +81,10 @@ function App() {
     const duplicatedItem = menu[currentCategory].find(
       (menu) => menu.name === $("#menu-name").value
     );
-    console.log(menu[currentCategory][0].name);
 
     if (duplicatedItem) {
       alert("이미 등록된 아이템입니다.");
     }
-
-    console.log(duplicatedItem);
 
     await MenuApi.createMenu(MenuName, currentCategory);
     render();
@@ -136,28 +133,28 @@ function App() {
     }
   });
 
+  /** init function */
   const initEventListeners = () => {
     /** 제출 새로고침 막기 */
     $("#menu-form").addEventListener("submit", (e) => {
       e.preventDefault();
     });
 
+    /**버튼과 enter눌렀을 때 이벤트 추가 */
     $("#menu-submit-button").addEventListener("click", addMenuName);
-
     $("#menu-name").addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
         addMenuName();
       }
     });
 
+    /**이벤트 위임 */
     $("nav").addEventListener("click", async (e) => {
       const isButton = e.target.classList.contains("cafe-category-name");
       if (isButton) {
         const categoryBtnName = e.target.dataset.categoryName;
-
         currentCategory = categoryBtnName;
 
-        // console.log(categoryBtnName);
         $(".mt-1").innerText = `${e.target.innerText} 메뉴 관리`;
         render();
       }

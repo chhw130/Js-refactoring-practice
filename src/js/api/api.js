@@ -1,5 +1,6 @@
 export const BASE_URL = "http://localhost:3000/api";
 
+/**API METHOD */
 const HTTP_METHOD = {
   POST(data) {
     return {
@@ -10,8 +11,28 @@ const HTTP_METHOD = {
       body: JSON.stringify(data),
     };
   },
+  PUT(data) {
+    return {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    };
+  },
+  TOGGLE(data) {
+    return {
+      method: "PUT",
+    };
+  },
+  DELETE(data) {
+    return {
+      method: "DELETE",
+    };
+  },
 };
 
+/**fetch */
 const request = async (url, option) => {
   const response = await fetch(url, option);
   if (!response.ok) {
@@ -20,58 +41,47 @@ const request = async (url, option) => {
   return response.json();
 };
 
+const requestWithoutJson = async (url, option) => {
+  const response = await fetch(url, option);
+  if (!response.ok) {
+    alert("에러 발생");
+  }
+  return response;
+};
+
+/**API Function */
 export const MenuApi = {
+  /**메뉴 불러오기 */
   getAllMenuByCategory(category) {
     return request(`${BASE_URL}/category/${category}/menu`);
   },
-  async createMenu(name, category) {
-    const response = await fetch(`${BASE_URL}/category/${category}/menu`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name }),
-    });
-    if (!response.ok) {
-      console.error("에러 발생");
-    }
+
+  /* 메뉴 추가하기 **/
+  createMenu(name, category) {
+    return request(
+      `${BASE_URL}/category/${category}/menu`,
+      HTTP_METHOD.POST({ name })
+    );
   },
+  /** 메뉴 수정하기 */
   async updateMenu(category, name, menuId) {
-    const response = await fetch(
+    return request(
       `${BASE_URL}/category/${category}/menu/${menuId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name }),
-      }
+      HTTP_METHOD.PUT({ name })
     );
-    if (!response.ok) {
-      console.error("PUT 에러 발생");
-    }
-    return response.json();
   },
+  /**품절 처리하기 */
   async toggleMenu(category, menuId) {
-    const response = await fetch(
+    return request(
       `${BASE_URL}/category/${category}/menu/${menuId}/soldout`,
-      {
-        method: "PUT",
-      }
+      HTTP_METHOD.TOGGLE()
     );
-    if (!response.ok) {
-      console.error("Toggle 에러가 발생");
-    }
   },
+  /**메뉴 삭제하기 */
   async deleteMenu(category, menuId) {
-    const response = await fetch(
+    return requestWithoutJson(
       `${BASE_URL}/category/${category}/menu/${menuId}`,
-      {
-        method: "DELETE",
-      }
+      HTTP_METHOD.DELETE()
     );
-    if (!response.ok) {
-      console.error("DEL 에러가 발생");
-    }
   },
 };
